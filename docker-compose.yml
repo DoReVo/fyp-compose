@@ -1,0 +1,32 @@
+version: '3'
+services:
+  invoice-service:
+    image: php:7.4-apache
+    ports:
+      - 5001:80
+    volumes:
+      - /home/dorevo/Project/invoice-service:/var/www/html
+
+  payment-service:
+    image: php:7.4-apache
+    ports:
+      - 5002:80
+    volumes:
+      - /home/dorevo/Project/payment-service:/var/www/html
+
+  database-service:
+    image: mysql
+    ports:
+      - 5003:3306
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    volumes:
+      - /home/dorevo/Project/fypDatabase:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 5004:8080
