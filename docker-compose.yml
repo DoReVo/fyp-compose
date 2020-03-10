@@ -1,18 +1,35 @@
 version: '3'
+
+networks:
+  microservice:
+
 services:
   invoice-service:
-    image: php:7.4-apache
+    build:
+      context: ./apache
+      dockerfile: Dockerfile
     ports:
       - 5001:80
     volumes:
       - /home/dorevo/Project/invoice-service:/var/www/html
+    networks:
+      - microservice
+    depends_on:
+      - database-service
 
   payment-service:
-    image: php:7.4-apache
+    build:
+      context: ./apache
+      dockerfile: Dockerfile
     ports:
       - 5002:80
     volumes:
       - /home/dorevo/Project/payment-service:/var/www/html
+    networks:
+      - microservice
+    depends_on:
+      - database-service
+      - invoice-service
 
   database-service:
     image: mysql
@@ -24,9 +41,19 @@ services:
       - /home/dorevo/Project/fypDatabase:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: 123
+    networks:
+      - microservice
 
-  adminer:
-    image: adminer
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
     restart: always
     ports:
-      - 5004:8080
+      - 5004:80
+    depends_on:
+      - database-service
+    networks:
+      - microservice
+    environment:
+      PMA_HOST: database-service
+      PMA_USER: superUser
+      PMA_PASSWORD: 123
