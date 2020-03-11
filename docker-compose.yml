@@ -85,10 +85,24 @@ services:
       PMA_USER: superUser
       PMA_PASSWORD: 123
 
-  locust:
+  locust-jwt:
     image: locustio/locust
     ports:
-      - 8089:8089
+      - 5006:8089
+    depends_on:
+      - api-gateaway
+    networks:
+      - microservice
+    volumes:
+      - /home/dorevo/Project/fyp-load-test/jwt-bare/:/mnt/locust
+    environment:
+      LOCUSTFILE_PATH: /mnt/locust/locustfile.py
+      TARGET_URL: 'http://54.169.56.87/jwt-bare/public'
+
+  locust-session:
+    image: locustio/locust
+    ports:
+      - 5007:8089
     depends_on:
       - api-gateaway
     networks:
@@ -97,4 +111,4 @@ services:
       - /home/dorevo/Project/fyp-load-test/session-bare/:/mnt/locust
     environment:
       LOCUSTFILE_PATH: /mnt/locust/locustfile.py
-      TARGET_URL: "http://api-gateaway/public"
+      TARGET_URL: 'http://54.169.56.87/session-bare/public'
