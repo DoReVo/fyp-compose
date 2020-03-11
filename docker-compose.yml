@@ -4,6 +4,20 @@ networks:
   microservice:
 
 services:
+  api-gateaway:
+    build:
+      context: ./apache
+      dockerfile: Dockerfile
+    ports:
+      - 5000:80
+    volumes:
+      - /home/dorevo/Project/api-gateaway:/var/www/html
+    networks:
+      - microservice
+    depends_on:
+      - invoice-service
+      - payment-service
+
   invoice-service:
     build:
       context: ./apache
@@ -16,6 +30,7 @@ services:
       - microservice
     depends_on:
       - database-service
+      - redis-service
 
   payment-service:
     build:
@@ -29,6 +44,7 @@ services:
       - microservice
     depends_on:
       - database-service
+      - redis-service
       - invoice-service
 
   database-service:
@@ -44,11 +60,22 @@ services:
     networks:
       - microservice
 
+  redis-service:
+    image: redis:latest
+    ports:
+      - 5004:6379
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - /home/dorevo/Project/fypRedisCache:/data
+    restart: always
+    networks:
+      - microservice
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     restart: always
     ports:
-      - 5004:80
+      - 5005:80
     depends_on:
       - database-service
     networks:
@@ -57,3 +84,17 @@ services:
       PMA_HOST: database-service
       PMA_USER: superUser
       PMA_PASSWORD: 123
+
+  locust:
+    image: locustio/locust
+    ports:
+      - 8089:8089
+    depends_on:
+      - api-gateaway
+    networks:
+      - microservice
+    volumes:
+      - /home/dorevo/Project/fyp-load-test/session-bare/:/mnt/locust
+    environment:
+      LOCUSTFILE_PATH: /mnt/locust/locustfile.py
+      TARGET_URL: "http://api-gateaway/public"
